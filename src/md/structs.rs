@@ -3,7 +3,7 @@ use cached::proc_macro::cached;
 use cached::UnboundCache;
 use icu_properties::{maps, sets, GeneralCategory, GeneralCategoryGroup, Script};
 
-use crate::consts::{COMMON_SAFE_ASCII_CHARACTERS, UTF8_MAXIMAL_ALLOCATION};
+use crate::consts::COMMON_SAFE_ASCII_CHARACTERS;
 use crate::utils::{in_range, is_accentuated, unicode_range};
 
 // Mess Plugin Char representation
@@ -64,9 +64,11 @@ impl MessDetectorChar {
     }
 }
 
+// Grow on demand: documents only ever touch a few thousand distinct chars, while
+// pre-sizing for every Unicode scalar value commits a 66 MiB table up front.
 #[cached(
     type = "UnboundCache<char, MessDetectorChar>",
-    create = "{ UnboundCache::with_capacity(UTF8_MAXIMAL_ALLOCATION) }",
+    create = "{ UnboundCache::new() }",
     convert = r#"{ character }"#
 )]
 fn new_mess_detector_character(character: char) -> MessDetectorChar {
